@@ -1,0 +1,98 @@
+# ════════════════════════════════════════════════════════════════
+#  GitHub Actions CI — Student Registration Form
+#  Runs on every push & pull request to main.
+#  Validates that index.html exists and passes all tests.
+# ════════════════════════════════════════════════════════════════
+
+name: CI — Validate Student Registration Form
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-html:
+    name: Validate HTML & Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout Code ──
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Verify index.html exists ──
+      - name: Check index.html exists
+        run: |
+          echo "📄 Checking if index.html exists..."
+          if [ ! -f index.html ]; then
+            echo "❌ ERROR: index.html not found in repository root!"
+            exit 1
+          fi
+          echo "✅ index.html found."
+
+      # ── 3. Verify required HTML elements ──
+      - name: Verify required HTML elements
+        run: |
+          echo "🔍 Checking required HTML elements..."
+          ERRORS=0
+
+          check_element() {
+            if ! grep -qi "$1" index.html; then
+              echo "  ❌ Missing: $2"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "  ✅ Found: $2"
+            fi
+          }
+
+          check_element '<form'              '<form> tag'
+          check_element 'id="firstName"'      'First Name field'
+          check_element 'id="lastName"'        'Last Name field'
+          check_element 'id="email"'           'Email field'
+          check_element 'id="phone"'           'Phone field'
+          check_element 'id="dob"'             'Date of Birth field'
+          check_element 'name="gender"'        'Gender radio buttons'
+          check_element 'id="course"'          'Course dropdown'
+          check_element 'id="semester"'        'Semester dropdown'
+          check_element 'type="submit"'        'Submit button'
+          check_element 'id="terms"'           'Terms checkbox'
+          check_element '<title>'              '<title> tag'
+          check_element 'viewport'             'Viewport meta tag'
+
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ $ERRORS required element(s) missing!"
+            exit 1
+          fi
+
+          echo ""
+          echo "🎉 All required HTML elements verified!"
+
+      # ── 4. Set up Python ──
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ── 5. Install dependencies ──
+      - name: Install test dependencies
+        run: pip install pytest
+
+      # ── 6. Run pytest suite ──
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
+
+      # ── 7. Summary ──
+      - name: Print summary
+        if: always()
+        run: |
+          echo "════════════════════════════════════"
+          echo "  CI Pipeline Complete"
+          echo "════════════════════════════════════"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  Branch:     ${{ github.ref_name }}"
+          echo "  Commit:     ${{ github.sha }}"
+          echo "  Triggered:  ${{ github.event_name }}"
+          echo "════════════════════════════════════"
