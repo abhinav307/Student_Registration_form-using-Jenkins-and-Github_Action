@@ -443,35 +443,40 @@
                 if (!res.ok) throw new Error('Failed to fetch stats');
                 const data = await res.json();
 
-                document.getElementById('statTotal').textContent = data.total_students || 0;
-                document.getElementById('totalCount').textContent = data.total_students || 0;
+                document.getElementById('statTotal').textContent = data.total || 0;
+                document.getElementById('totalCount').textContent = data.total || 0;
 
-                if (data.most_popular_course) {
-                    document.getElementById('statCourse').textContent = data.most_popular_course;
-                    if (data.most_popular_course_count) {
-                        document.getElementById('statCourseDetail').textContent = data.most_popular_course_count + ' students enrolled';
+                // Find most popular course
+                if (data.courses && Object.keys(data.courses).length > 0) {
+                    let mostPopular = '';
+                    let maxCount = 0;
+                    for (const [course, count] of Object.entries(data.courses)) {
+                        if (count > maxCount) {
+                            maxCount = count;
+                            mostPopular = course;
+                        }
                     }
+                    document.getElementById('statCourse').textContent = mostPopular;
+                    document.getElementById('statCourseDetail').textContent = maxCount + ' students enrolled';
                 } else {
                     document.getElementById('statCourse').textContent = '\u2014';
                     document.getElementById('statCourseDetail').textContent = '';
                 }
 
-                if (data.gender_distribution) {
-                    const gd = data.gender_distribution;
+                if (data.genders && Object.keys(data.genders).length > 0) {
+                    const gd = data.genders;
                     const parts = [];
                     if (gd.Male) parts.push('M: ' + gd.Male);
                     if (gd.Female) parts.push('F: ' + gd.Female);
                     if (gd.Other) parts.push('O: ' + gd.Other);
                     document.getElementById('statGender').textContent = parts.join(' / ') || '\u2014';
 
-                    const total = (gd.Male || 0) + (gd.Female || 0) + (gd.Other || 0);
-                    if (total > 0) {
-                        const pcts = [];
-                        if (gd.Male) pcts.push(Math.round((gd.Male / total) * 100) + '% Male');
-                        if (gd.Female) pcts.push(Math.round((gd.Female / total) * 100) + '% Female');
-                        if (gd.Other) pcts.push(Math.round((gd.Other / total) * 100) + '% Other');
-                        document.getElementById('statGenderDetail').textContent = pcts.join(', ');
-                    }
+                    const total = data.total || 1; // avoid division by zero
+                    const pcts = [];
+                    if (gd.Male) pcts.push(Math.round((gd.Male / total) * 100) + '% Male');
+                    if (gd.Female) pcts.push(Math.round((gd.Female / total) * 100) + '% Female');
+                    if (gd.Other) pcts.push(Math.round((gd.Other / total) * 100) + '% Other');
+                    document.getElementById('statGenderDetail').textContent = pcts.join(', ');
                 } else {
                     document.getElementById('statGender').textContent = '\u2014';
                     document.getElementById('statGenderDetail').textContent = '';
