@@ -9,10 +9,13 @@ import os
 import re
 import sqlite3
 from datetime import datetime
+from functools import wraps
 
-from flask import Flask, request, jsonify, send_from_directory, g
+from flask import Flask, request, jsonify, send_from_directory, g, session, redirect, url_for, render_template
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "super-secret-key"
 app.config["DATABASE"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "students.db")
 
 
@@ -60,6 +63,18 @@ def init_db(db_path=None):
                 enroll_year     TEXT,
                 address         TEXT,
                 registered_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                email           TEXT    NOT NULL UNIQUE,
+                password_hash   TEXT    NOT NULL,
+                full_name       TEXT,
+                bio             TEXT,
+                theme           TEXT    DEFAULT 'light'
             )
             """
         )
@@ -121,6 +136,29 @@ def row_to_dict(row):
 
 
 # ---------------------------------------------------------------------------
+# Auth helpers & Context
+# ---------------------------------------------------------------------------
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.context_processor
+def inject_user():
+    user = None
+    if 'user_id' in session:
+        db = get_db()
+        user_row = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+        if user_row:
+            user = row_to_dict(user_row)
+    return dict(current_user=user)
+
+
+# ---------------------------------------------------------------------------
 # CORS – add headers to every response
 # ---------------------------------------------------------------------------
 
@@ -133,21 +171,82 @@ def add_cors_headers(response):
 
 
 # ---------------------------------------------------------------------------
-# Page routes
+# Page & Auth routes
 # ---------------------------------------------------------------------------
 
 @app.route("/")
 def index():
-    """Serve index.html from the project root directory."""
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    return send_from_directory(root_dir, "index.html")
+    """Render index.html from templates."""
+    return render_template("index.html")
 
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
-    """Serve the dashboard page from the templates folder."""
-    templates_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
-    return send_from_directory(templates_dir, "dashboard.html")
+    """Render the dashboard page."""
+    return render_template("dashboard.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        db = get_db()
+        user_row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if user_row and check_password_hash(user_row["password_hash"], password):
+            session['user_id'] = user_row['id']
+            return redirect(url_for('dashboard'))
+        return render_template("login.html", error="Invalid email or password.")
+    return render_template("login.html")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        full_name = request.form.get("full_name")
+        
+        db = get_db()
+        try:
+            db.execute("INSERT INTO users (email, password_hash, full_name) VALUES (?, ?, ?)",
+                       (email, generate_password_hash(password), full_name))
+            db.commit()
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            return render_template("signup.html", error="Email already registered.")
+    return render_template("signup.html")
+
+@app.route("/logout")
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    if request.method == "POST":
+        full_name = request.form.get("full_name")
+        bio = request.form.get("bio")
+        db = get_db()
+        db.execute("UPDATE users SET full_name = ?, bio = ? WHERE id = ?", (full_name, bio, session['user_id']))
+        db.commit()
+        return redirect(url_for('profile'))
+    return render_template("profile.html")
+
+@app.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    if request.method == "POST":
+        theme = request.form.get("theme")
+        password = request.form.get("password")
+        db = get_db()
+        if theme:
+            db.execute("UPDATE users SET theme = ? WHERE id = ?", (theme, session['user_id']))
+        if password:
+            db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(password), session['user_id']))
+        db.commit()
+        return redirect(url_for('settings'))
+    return render_template("settings.html")
 
 
 # ---------------------------------------------------------------------------

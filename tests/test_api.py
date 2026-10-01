@@ -27,15 +27,33 @@ def client():
 
     app.config['TESTING'] = True
     app.config['DATABASE'] = db_path
+    
+    # We need a secret key for session to work in tests if not already set
+    app.secret_key = "test-secret"
 
     init_db(db_path)
 
     with app.test_client() as test_client:
+        # Create a test user and log them in
+        with app.app_context():
+            db = init_db.get_db() if hasattr(init_db, 'get_db') else app.extensions.get('sqlite3', None) # this won't work easily
+            from app import get_db, generate_password_hash
+            db = get_db()
+            db.execute("INSERT INTO users (email, password_hash) VALUES (?, ?)", ('test@test.com', generate_password_hash('test')))
+            db.commit()
+            user_id = db.execute("SELECT id FROM users WHERE email = 'test@test.com'").fetchone()['id']
+            
+        with test_client.session_transaction() as sess:
+            sess['user_id'] = user_id
+
         yield test_client
 
     # Cleanup
     if os.path.exists(db_path):
-        os.unlink(db_path)
+        try:
+            os.unlink(db_path)
+        except OSError:
+            pass
 
 
 # ---------------------------------------------------------------------------

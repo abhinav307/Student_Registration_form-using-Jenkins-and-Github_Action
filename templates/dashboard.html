@@ -357,9 +357,61 @@
                 padding: 1.25rem;
             }
         }
+        /* ── Navbar ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            margin-left: 1.5rem;
+            font-weight: 500;
+        }
+        .nav-links a:hover {
+            color: #2563eb;
+        }
+        .nav-links .btn {
+            background-color: #2563eb;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+        .nav-links .btn:hover {
+            background-color: #1d4ed8;
+            color: #fff;
+        }
+        body {
+            padding-top: 5rem;
+        }
     </style>
 </head>
 <body>
+
+<nav class="navbar">
+    <div class="logo" style="font-weight:bold; font-size:1.2rem; color:#0f172a;">App</div>
+    <div class="nav-links">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        {% if current_user %}
+            <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('settings') }}">Settings</a>
+            <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn">Login</a>
+        {% endif %}
+    </div>
+</nav>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -369,7 +421,7 @@
 
         <!-- Navigation -->
         <div class="nav-bar">
-            <a href="/" class="nav-link">&#10094; Registration Form</a>
+            <a href="{{ url_for('index') }}" class="nav-link">&#10094; Registration Form</a>
         </div>
 
         <!-- Stats Cards -->

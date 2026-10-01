@@ -12,7 +12,7 @@ import re
 import pytest
 
 # ── Path to the HTML file under test ──
-HTML_FILE = os.path.join(os.path.dirname(__file__), '..', 'index.html')
+HTML_FILE = os.path.join(os.path.dirname(__file__), '..', 'templates', 'index.html')
 
 
 @pytest.fixture(scope='module')
