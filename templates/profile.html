@@ -37,8 +37,15 @@
     <h1>App</h1>
     {% if error %}<div class="error">{{ error }}</div>{% endif %}
     <form method="POST">
-        { body }
+        <div class="field-group">
+            <label for="full_name" style="font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">Full Name</label>
+            <input type="text" id="full_name" name="full_name" value="{{ current_user.full_name or '' }}" required>
+        </div>
+        <div class="field-group">
+            <label for="bio" style="font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">Bio</label>
+            <textarea id="bio" name="bio" rows="4">{{ current_user.bio or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn-submit">Update Profile</button>
     </form>
-    { extra }
 </div>
 </body></html>

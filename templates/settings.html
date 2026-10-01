@@ -37,8 +37,18 @@
     <h1>App</h1>
     {% if error %}<div class="error">{{ error }}</div>{% endif %}
     <form method="POST">
-        { body }
+        <div class="field-group">
+            <label for="theme" style="font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">Theme Preference</label>
+            <select id="theme" name="theme" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #fff; width: 100%;">
+                <option value="light" {% if current_user.theme == 'light' %}selected{% endif %}>Light Mode</option>
+                <option value="dark" {% if current_user.theme == 'dark' %}selected{% endif %}>Dark Mode</option>
+            </select>
+        </div>
+        <div class="field-group">
+            <label for="password" style="font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">New Password</label>
+            <input type="password" id="password" name="password" placeholder="Leave blank to keep current">
+        </div>
+        <button type="submit" class="btn-submit">Save Settings</button>
     </form>
-    { extra }
 </div>
 </body></html>
