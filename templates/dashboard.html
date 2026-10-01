@@ -489,9 +489,9 @@
 
                 const res = await fetch(url);
                 if (!res.ok) throw new Error('Failed to fetch students');
-                const students = await res.json();
+                const data = await res.json();
 
-                renderTable(students);
+                renderTable(data.students);
             } catch (err) {
                 console.error('Fetch error:', err);
                 document.getElementById('tableContent').innerHTML =
@@ -537,9 +537,11 @@
                     })
                     : '\u2014';
 
+                const fullName = (student.first_name || '') + ' ' + (student.last_name || '');
+
                 html += '<tr>' +
                     '<td>' + (index + 1) + '</td>' +
-                    '<td>' + escapeHtml(student.name || '') + '</td>' +
+                    '<td>' + escapeHtml(fullName.trim() || '') + '</td>' +
                     '<td class="email-col">' + escapeHtml(student.email || '') + '</td>' +
                     '<td>' + escapeHtml(student.phone || '') + '</td>' +
                     '<td>' + escapeHtml(student.course || '') + '</td>' +
