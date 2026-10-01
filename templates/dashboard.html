@@ -394,9 +394,25 @@
         body {
             padding-top: 5rem;
         }
+
+        /* Dark Mode */
+        body.dark-mode { background-color: #0f172a; color: #f1f5f9; }
+        body.dark-mode .navbar { background: #1e293b; border-bottom-color: #334155; }
+        body.dark-mode .logo { color: #f8fafc !important; }
+        body.dark-mode .nav-links a { color: #cbd5e1; }
+        body.dark-mode .header h1 { color: #f8fafc; }
+        body.dark-mode .header .subtitle { color: #94a3b8; }
+        body.dark-mode .stat-card { background: #1e293b; border-color: #334155; }
+        body.dark-mode .stat-label, body.dark-mode .stat-detail { color: #cbd5e1; }
+        body.dark-mode .stat-value, body.dark-mode h3 { color: #f8fafc !important; }
+        body.dark-mode .search-input { background: #0f172a; border-color: #475569; color: #f8fafc; }
+        body.dark-mode table { background: #1e293b; border-color: #334155; box-shadow: none; }
+        body.dark-mode th { background: #0f172a; color: #cbd5e1; border-bottom-color: #334155; }
+        body.dark-mode td { border-bottom-color: #334155; color: #f1f5f9; }
+        body.dark-mode tr:hover td { background-color: #334155; }
     </style>
 </head>
-<body>
+<body class="{% if current_user and current_user.theme == 'dark' %}dark-mode{% endif %}">
 
 <nav class="navbar">
     <div class="logo" style="font-weight:bold; font-size:1.2rem; color:#0f172a;">App</div>

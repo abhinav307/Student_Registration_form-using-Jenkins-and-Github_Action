@@ -34,6 +34,21 @@
         .btn-submit { padding: 0.75rem 1.5rem; color: #ffffff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; margin-top: 1rem; transition: background 0.2s; }
         .btn-submit:hover { background-color: #1d4ed8; }
         
+        /* Dark Mode */
+        body.dark-mode { background-color: #0f172a; color: #f1f5f9; }
+        body.dark-mode .navbar { background: #1e293b; border-bottom-color: #334155; }
+        body.dark-mode .logo { color: #f8fafc !important; }
+        body.dark-mode .nav-links a { color: #cbd5e1; }
+        body.dark-mode .profile-card { background: #1e293b; border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        body.dark-mode .avatar { border-color: #1e293b; background-color: #334155; }
+        body.dark-mode .profile-info h1 { color: #f8fafc; }
+        body.dark-mode .profile-info .email { color: #94a3b8; }
+        body.dark-mode .profile-info p { color: #cbd5e1 !important; }
+        body.dark-mode .edit-section { background: #0f172a; border-top-color: #334155; }
+        body.dark-mode .edit-section h3 { color: #f8fafc; }
+        body.dark-mode .field-group label { color: #cbd5e1; }
+        body.dark-mode .field-group input, body.dark-mode .field-group textarea { background: #1e293b; border-color: #475569; color: #f1f5f9; }
+
         @media (max-width: 640px) {
             .form-grid { grid-template-columns: 1fr; }
             .field-group.full-width { grid-column: span 1; }
@@ -42,7 +57,7 @@
         }
     </style>
 </head>
-<body>
+<body class="{% if current_user and current_user.theme == 'dark' %}dark-mode{% endif %}">
 <nav class="navbar">
     <div class="logo" style="font-weight: bold; font-size: 1.2rem;">Portal</div>
     <div class="nav-links">

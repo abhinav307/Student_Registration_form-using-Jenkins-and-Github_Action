@@ -52,13 +52,35 @@
         .btn-connect { padding: 0.5rem 1rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-weight: 500; }
         .btn-connect.connected { border-color: #ef4444; color: #ef4444; }
         
+        /* Dark Mode */
+        body.dark-mode { background-color: #0f172a; color: #f1f5f9; }
+        body.dark-mode .navbar { background: #1e293b; border-bottom-color: #334155; }
+        body.dark-mode .logo { color: #f8fafc !important; }
+        body.dark-mode .nav-links a { color: #cbd5e1; }
+        body.dark-mode .sidebar-nav { background: #1e293b; border-color: #334155; }
+        body.dark-mode .sidebar-nav button { color: #cbd5e1; border-bottom-color: #334155; }
+        body.dark-mode .sidebar-nav button:hover { background: #334155; }
+        body.dark-mode .sidebar-nav button.active { background: #0f172a; color: #60a5fa; border-left-color: #60a5fa; }
+        body.dark-mode .content { background: #1e293b; border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        body.dark-mode .content h2 { color: #f8fafc; border-bottom-color: #334155; }
+        body.dark-mode .content h3 { color: #e2e8f0 !important; }
+        body.dark-mode h4 { color: #f8fafc; }
+        body.dark-mode .field-group label { color: #cbd5e1; }
+        body.dark-mode .field-group input, body.dark-mode .field-group select { background: #0f172a; border-color: #475569; color: #f1f5f9; }
+        body.dark-mode .field-group p { color: #94a3b8 !important; }
+        body.dark-mode .toggle-group, body.dark-mode .connected-app { border-color: #475569; }
+        body.dark-mode .toggle-info p, body.dark-mode .app-info p { color: #94a3b8; }
+        body.dark-mode .btn-connect { background: #334155; border-color: #475569; color: #f8fafc; }
+        body.dark-mode .btn-connect.connected { border-color: #ef4444; color: #ef4444; background: transparent; }
+        body.dark-mode .app-icon { background: #0f172a; }
+        
         @media (max-width: 768px) {
             .settings-container { flex-direction: column; }
             .sidebar { width: 100%; }
         }
     </style>
 </head>
-<body>
+<body class="{% if current_user and current_user.theme == 'dark' %}dark-mode{% endif %}">
 <nav class="navbar">
     <div class="logo" style="font-weight: bold; font-size: 1.2rem;">Portal</div>
     <div class="nav-links">
@@ -156,6 +178,9 @@
             <div id="tab-apps" class="tab-content">
                 <h3 style="margin-bottom: 1.5rem; color: #475569;">Integrations</h3>
                 
+                <input type="hidden" name="github_connected" id="github_connected" value="{% if current_user.github %}1{% else %}0{% endif %}">
+                <input type="hidden" name="linkedin_connected" id="linkedin_connected" value="{% if current_user.linkedin %}1{% else %}0{% endif %}">
+                
                 <div class="connected-app">
                     <div class="app-icon">&#128187;</div>
                     <div class="app-info">
@@ -163,9 +188,9 @@
                         <p>Sync your projects and authenticate via GitHub.</p>
                     </div>
                     {% if current_user.github %}
-                        <button type="button" class="btn-connect connected">Disconnect</button>
+                        <button type="button" class="btn-connect connected" onclick="toggleApp('github_connected', 0)">Disconnect</button>
                     {% else %}
-                        <button type="button" class="btn-connect">Connect</button>
+                        <button type="button" class="btn-connect" onclick="toggleApp('github_connected', 1)">Connect</button>
                     {% endif %}
                 </div>
                 
@@ -176,19 +201,24 @@
                         <p>Keep your profile details updated automatically.</p>
                     </div>
                     {% if current_user.linkedin %}
-                        <button type="button" class="btn-connect connected">Disconnect</button>
+                        <button type="button" class="btn-connect connected" onclick="toggleApp('linkedin_connected', 0)">Disconnect</button>
                     {% else %}
-                        <button type="button" class="btn-connect">Connect</button>
+                        <button type="button" class="btn-connect" onclick="toggleApp('linkedin_connected', 1)">Connect</button>
                     {% endif %}
                 </div>
             </div>
             
-            <button type="submit" class="btn-submit">Save All Settings</button>
+            <button type="submit" class="btn-submit" id="mainSubmitBtn">Save All Settings</button>
         </form>
     </div>
 </div>
 
 <script>
+    function toggleApp(inputId, val) {
+        document.getElementById(inputId).value = val;
+        document.getElementById("mainSubmitBtn").click();
+    }
+    
     function openTab(evt, tabName) {
         evt.preventDefault();
         

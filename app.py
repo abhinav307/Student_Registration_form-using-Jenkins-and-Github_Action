@@ -272,6 +272,8 @@ def settings():
         password = request.form.get("password")
         notifications = request.form.get("notifications")
         marketing_emails = request.form.get("marketing_emails")
+        github_conn = request.form.get("github_connected")
+        linkedin_conn = request.form.get("linkedin_connected")
         
         notif_val = 1 if notifications == 'on' else 0
         mkt_val = 1 if marketing_emails == 'on' else 0
@@ -281,6 +283,18 @@ def settings():
             db.execute("UPDATE users SET theme = ?, notifications = ?, marketing_emails = ? WHERE id = ?", (theme, notif_val, mkt_val, session['user_id']))
         if password:
             db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(password), session['user_id']))
+            
+        # Update connections
+        if github_conn == "1":
+            db.execute("UPDATE users SET github = 'connected' WHERE id = ?", (session['user_id'],))
+        elif github_conn == "0":
+            db.execute("UPDATE users SET github = NULL WHERE id = ?", (session['user_id'],))
+            
+        if linkedin_conn == "1":
+            db.execute("UPDATE users SET linkedin = 'connected' WHERE id = ?", (session['user_id'],))
+        elif linkedin_conn == "0":
+            db.execute("UPDATE users SET linkedin = NULL WHERE id = ?", (session['user_id'],))
+            
         db.commit()
         return redirect(url_for('settings'))
     return render_template("settings.html")
