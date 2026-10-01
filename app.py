@@ -93,6 +93,7 @@ def init_db(db_path=None):
             db.execute("ALTER TABLE users ADD COLUMN linkedin TEXT")
             db.execute("ALTER TABLE users ADD COLUMN github TEXT")
             db.execute("ALTER TABLE users ADD COLUMN notifications INTEGER DEFAULT 1")
+            db.execute("ALTER TABLE users ADD COLUMN marketing_emails INTEGER DEFAULT 1")
         except sqlite3.OperationalError:
             pass # Columns already exist
 
@@ -266,12 +267,14 @@ def settings():
         theme = request.form.get("theme")
         password = request.form.get("password")
         notifications = request.form.get("notifications")
+        marketing_emails = request.form.get("marketing_emails")
         
         notif_val = 1 if notifications == 'on' else 0
+        mkt_val = 1 if marketing_emails == 'on' else 0
         
         db = get_db()
         if theme:
-            db.execute("UPDATE users SET theme = ?, notifications = ? WHERE id = ?", (theme, notif_val, session['user_id']))
+            db.execute("UPDATE users SET theme = ?, notifications = ?, marketing_emails = ? WHERE id = ?", (theme, notif_val, mkt_val, session['user_id']))
         if password:
             db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(password), session['user_id']))
         db.commit()

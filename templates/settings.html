@@ -14,12 +14,15 @@
         
         .sidebar { width: 250px; flex-shrink: 0; }
         .sidebar-nav { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-        .sidebar-nav a { padding: 1rem 1.5rem; color: #475569; text-decoration: none; border-bottom: 1px solid #f1f5f9; font-weight: 500; transition: background 0.2s; }
-        .sidebar-nav a:hover { background: #f8fafc; }
-        .sidebar-nav a.active { background: #eff6ff; color: #2563eb; border-left: 3px solid #2563eb; }
+        .sidebar-nav button { text-align: left; background: none; border: none; font-size: 1rem; font-family: inherit; cursor: pointer; padding: 1rem 1.5rem; color: #475569; border-bottom: 1px solid #f1f5f9; font-weight: 500; transition: background 0.2s; }
+        .sidebar-nav button:hover { background: #f8fafc; }
+        .sidebar-nav button.active { background: #eff6ff; color: #2563eb; border-left: 3px solid #2563eb; }
         
         .content { flex-grow: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .content h2 { margin-bottom: 2rem; font-size: 1.5rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         
         .field-group { display: flex; flex-direction: column; margin-bottom: 1.5rem; }
         .field-group label { font-size: 0.9rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
@@ -38,8 +41,16 @@
         input:checked + .slider { background-color: #2563eb; }
         input:checked + .slider:before { transform: translateX(20px); }
         
-        .btn-submit { padding: 0.75rem 2rem; color: #ffffff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 1rem; transition: background 0.2s; margin-top: 1rem; }
+        .btn-submit { padding: 0.75rem 2rem; color: #ffffff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 1rem; transition: background 0.2s; margin-top: 1.5rem; width: 100%; }
         .btn-submit:hover { background-color: #1d4ed8; }
+        
+        .connected-app { display: flex; align-items: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1rem; }
+        .app-icon { font-size: 1.5rem; margin-right: 1rem; background: #f1f5f9; padding: 0.5rem; border-radius: 8px; }
+        .app-info { flex-grow: 1; }
+        .app-info h4 { margin-bottom: 0.25rem; }
+        .app-info p { font-size: 0.85rem; color: #64748b; }
+        .btn-connect { padding: 0.5rem 1rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .btn-connect.connected { border-color: #ef4444; color: #ef4444; }
         
         @media (max-width: 768px) {
             .settings-container { flex-direction: column; }
@@ -66,10 +77,10 @@
 <div class="settings-container">
     <div class="sidebar">
         <div class="sidebar-nav">
-            <a href="#" class="active">Account Settings</a>
-            <a href="#">Privacy & Security</a>
-            <a href="#">Email Notifications</a>
-            <a href="#">Connected Apps</a>
+            <button class="tab-btn active" onclick="openTab(event, 'tab-account')">Account Settings</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-security')">Privacy & Security</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-notifications')">Email Notifications</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-apps')">Connected Apps</button>
         </div>
     </div>
     
@@ -77,56 +88,126 @@
         <h2>Advanced Settings</h2>
         
         <form method="POST">
-            <!-- Appearance -->
-            <h3 style="margin-bottom: 1rem; color: #475569; font-size: 1.1rem;">Appearance</h3>
-            <div class="field-group">
-                <label for="theme">Theme Preference</label>
-                <select id="theme" name="theme">
-                    <option value="light" {% if current_user.theme == 'light' %}selected{% endif %}>Light Mode (Default)</option>
-                    <option value="dark" {% if current_user.theme == 'dark' %}selected{% endif %}>Dark Mode (Coming Soon)</option>
-                    <option value="system" {% if current_user.theme == 'system' %}selected{% endif %}>System Default</option>
-                </select>
-            </div>
-            
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;">
-            
-            <!-- Security -->
-            <h3 style="margin-bottom: 1rem; color: #475569; font-size: 1.1rem;">Security</h3>
-            <div class="field-group">
-                <label for="password">Change Password</label>
-                <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">We recommend using a strong password that you don't use elsewhere.</p>
-            </div>
-            
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;">
-            
-            <!-- Notifications -->
-            <h3 style="margin-bottom: 1rem; color: #475569; font-size: 1.1rem;">Notifications</h3>
-            <div class="toggle-group">
-                <div class="toggle-info">
-                    <h4>Email Notifications</h4>
-                    <p>Receive email updates about your account activity and security alerts.</p>
+            <!-- Account Settings Tab -->
+            <div id="tab-account" class="tab-content active">
+                <h3 style="margin-bottom: 1.5rem; color: #475569;">Appearance & General</h3>
+                <div class="field-group">
+                    <label for="theme">Theme Preference</label>
+                    <select id="theme" name="theme">
+                        <option value="light" {% if current_user.theme == 'light' %}selected{% endif %}>Light Mode (Default)</option>
+                        <option value="dark" {% if current_user.theme == 'dark' %}selected{% endif %}>Dark Mode</option>
+                        <option value="system" {% if current_user.theme == 'system' %}selected{% endif %}>System Default</option>
+                    </select>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" name="notifications" {% if current_user.notifications == 1 %}checked{% endif %}>
-                    <span class="slider"></span>
-                </label>
+                
+                <div class="field-group" style="margin-top: 2rem;">
+                    <label>Account Email</label>
+                    <input type="email" value="{{ current_user.email }}" disabled style="background: #f1f5f9; cursor: not-allowed;">
+                    <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">To change your email, please contact support.</p>
+                </div>
             </div>
             
-            <div class="toggle-group">
-                <div class="toggle-info">
-                    <h4>Marketing Communications</h4>
-                    <p>Receive newsletters and updates about new features.</p>
+            <!-- Privacy & Security Tab -->
+            <div id="tab-security" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem; color: #475569;">Security</h3>
+                <div class="field-group">
+                    <label for="password">Change Password</label>
+                    <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+                    <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">We recommend using a strong password that you don't use elsewhere.</p>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" checked disabled>
-                    <span class="slider"></span>
-                </label>
+                
+                <div class="field-group" style="margin-top: 2rem;">
+                    <label>Two-Factor Authentication (2FA)</label>
+                    <div style="padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Status: Disabled</span>
+                        <button type="button" class="btn-connect" style="border-color: #2563eb; color: #2563eb;" onclick="alert('2FA Setup Coming Soon')">Enable 2FA</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications Tab -->
+            <div id="tab-notifications" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem; color: #475569;">Notification Preferences</h3>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Security Alerts & Updates</h4>
+                        <p>Receive email updates about your account activity and security alerts.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="notifications" {% if current_user.notifications == 1 %}checked{% endif %}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Marketing Communications</h4>
+                        <p>Receive newsletters and updates about new features.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="marketing_emails" {% if current_user.marketing_emails == 1 %}checked{% endif %}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Connected Apps Tab -->
+            <div id="tab-apps" class="tab-content">
+                <h3 style="margin-bottom: 1.5rem; color: #475569;">Integrations</h3>
+                
+                <div class="connected-app">
+                    <div class="app-icon">&#128187;</div>
+                    <div class="app-info">
+                        <h4>GitHub Integration</h4>
+                        <p>Sync your projects and authenticate via GitHub.</p>
+                    </div>
+                    {% if current_user.github %}
+                        <button type="button" class="btn-connect connected">Disconnect</button>
+                    {% else %}
+                        <button type="button" class="btn-connect">Connect</button>
+                    {% endif %}
+                </div>
+                
+                <div class="connected-app">
+                    <div class="app-icon">&#128188;</div>
+                    <div class="app-info">
+                        <h4>LinkedIn Sync</h4>
+                        <p>Keep your profile details updated automatically.</p>
+                    </div>
+                    {% if current_user.linkedin %}
+                        <button type="button" class="btn-connect connected">Disconnect</button>
+                    {% else %}
+                        <button type="button" class="btn-connect">Connect</button>
+                    {% endif %}
+                </div>
             </div>
             
             <button type="submit" class="btn-submit">Save All Settings</button>
         </form>
     </div>
 </div>
+
+<script>
+    function openTab(evt, tabName) {
+        evt.preventDefault();
+        
+        // Hide all tab content
+        const tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove("active");
+        }
+        
+        // Remove active class from all buttons
+        const tabBtns = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < tabBtns.length; i++) {
+            tabBtns[i].classList.remove("active");
+        }
+        
+        // Show the current tab and add active class to button
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+</script>
 </body>
 </html>
