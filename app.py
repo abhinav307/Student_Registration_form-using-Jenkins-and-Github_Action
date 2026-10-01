@@ -85,17 +85,21 @@ def init_db(db_path=None):
             """
         )
         
-        # Safely add columns if they don't exist (for existing dev DBs)
-        try:
-            db.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT 'https://ui-avatars.com/api/?name=User&background=random'")
-            db.execute("ALTER TABLE users ADD COLUMN cover_url TEXT DEFAULT 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1000&q=80'")
-            db.execute("ALTER TABLE users ADD COLUMN twitter TEXT")
-            db.execute("ALTER TABLE users ADD COLUMN linkedin TEXT")
-            db.execute("ALTER TABLE users ADD COLUMN github TEXT")
-            db.execute("ALTER TABLE users ADD COLUMN notifications INTEGER DEFAULT 1")
-            db.execute("ALTER TABLE users ADD COLUMN marketing_emails INTEGER DEFAULT 1")
-        except sqlite3.OperationalError:
-            pass # Columns already exist
+        columns_to_add = [
+            "avatar_url TEXT DEFAULT 'https://ui-avatars.com/api/?name=User&background=random'",
+            "cover_url TEXT DEFAULT 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1000&q=80'",
+            "twitter TEXT",
+            "linkedin TEXT",
+            "github TEXT",
+            "notifications INTEGER DEFAULT 1",
+            "marketing_emails INTEGER DEFAULT 1"
+        ]
+        
+        for col in columns_to_add:
+            try:
+                db.execute(f"ALTER TABLE users ADD COLUMN {col}")
+            except sqlite3.OperationalError:
+                pass # Column likely already exists
 
         db.commit()
 
