@@ -2,25 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>App</title>
+    <title>Settings - App</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; padding: 2rem; padding-top: 5rem; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { font-family: -apple-system, "Segoe UI", sans-serif; background-color: #f8fafc; color: #0f172a; min-height: 100vh; padding-top: 4.5rem; }
         .navbar { position: fixed; top: 0; left: 0; right: 0; background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 50; }
         .nav-links a { text-decoration: none; color: #475569; margin-left: 1.5rem; font-weight: 500; }
-        .nav-links .btn { background-color: #2563eb; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; }
-        .form-container { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 400px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .form-container h1 { text-align: center; margin-bottom: 1.5rem; }
-        .field-group { display: flex; flex-direction: column; margin-bottom: 1rem; }
-        .field-group input, .field-group textarea { padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; }
-        .btn-submit { padding: 0.75rem; color: #ffffff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; width: 100%; }
-        .error { color: #ef4444; text-align: center; margin-bottom: 1rem; }
-        .link { text-align: center; display: block; text-decoration: none; color: #2563eb; margin-top: 1rem; }
+        .nav-links .btn { background-color: #ef4444; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; }
+        
+        .settings-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; display: flex; gap: 2rem; }
+        
+        .sidebar { width: 250px; flex-shrink: 0; }
+        .sidebar-nav { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .sidebar-nav a { padding: 1rem 1.5rem; color: #475569; text-decoration: none; border-bottom: 1px solid #f1f5f9; font-weight: 500; transition: background 0.2s; }
+        .sidebar-nav a:hover { background: #f8fafc; }
+        .sidebar-nav a.active { background: #eff6ff; color: #2563eb; border-left: 3px solid #2563eb; }
+        
+        .content { flex-grow: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .content h2 { margin-bottom: 2rem; font-size: 1.5rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+        
+        .field-group { display: flex; flex-direction: column; margin-bottom: 1.5rem; }
+        .field-group label { font-size: 0.9rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
+        .field-group input, .field-group select { padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.95rem; }
+        .field-group input:focus, .field-group select:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .toggle-group { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1rem; }
+        .toggle-info h4 { margin-bottom: 0.25rem; }
+        .toggle-info p { font-size: 0.85rem; color: #64748b; }
+        
+        /* Toggle Switch CSS */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2563eb; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        
+        .btn-submit { padding: 0.75rem 2rem; color: #ffffff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 1rem; transition: background 0.2s; margin-top: 1rem; }
+        .btn-submit:hover { background-color: #1d4ed8; }
+        
+        @media (max-width: 768px) {
+            .settings-container { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
     </style>
 </head>
 <body>
 <nav class="navbar">
-    <div class="logo">App</div>
+    <div class="logo" style="font-weight: bold; font-size: 1.2rem;">Portal</div>
     <div class="nav-links">
         <a href="{{ url_for('index') }}">Home</a>
         <a href="{{ url_for('dashboard') }}">Dashboard</a>
@@ -33,22 +62,71 @@
         {% endif %}
     </div>
 </nav>
-<div class="form-container">
-    <h1>App</h1>
-    {% if error %}<div class="error">{{ error }}</div>{% endif %}
-    <form method="POST">
-        <div class="field-group">
-            <label for="theme" style="font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">Theme Preference</label>
-            <select id="theme" name="theme" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #fff; width: 100%;">
-                <option value="light" {% if current_user.theme == 'light' %}selected{% endif %}>Light Mode</option>
-                <option value="dark" {% if current_user.theme == 'dark' %}selected{% endif %}>Dark Mode</option>
-            </select>
+
+<div class="settings-container">
+    <div class="sidebar">
+        <div class="sidebar-nav">
+            <a href="#" class="active">Account Settings</a>
+            <a href="#">Privacy & Security</a>
+            <a href="#">Email Notifications</a>
+            <a href="#">Connected Apps</a>
         </div>
-        <div class="field-group">
-            <label for="password" style="font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">New Password</label>
-            <input type="password" id="password" name="password" placeholder="Leave blank to keep current">
-        </div>
-        <button type="submit" class="btn-submit">Save Settings</button>
-    </form>
+    </div>
+    
+    <div class="content">
+        <h2>Advanced Settings</h2>
+        
+        <form method="POST">
+            <!-- Appearance -->
+            <h3 style="margin-bottom: 1rem; color: #475569; font-size: 1.1rem;">Appearance</h3>
+            <div class="field-group">
+                <label for="theme">Theme Preference</label>
+                <select id="theme" name="theme">
+                    <option value="light" {% if current_user.theme == 'light' %}selected{% endif %}>Light Mode (Default)</option>
+                    <option value="dark" {% if current_user.theme == 'dark' %}selected{% endif %}>Dark Mode (Coming Soon)</option>
+                    <option value="system" {% if current_user.theme == 'system' %}selected{% endif %}>System Default</option>
+                </select>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;">
+            
+            <!-- Security -->
+            <h3 style="margin-bottom: 1rem; color: #475569; font-size: 1.1rem;">Security</h3>
+            <div class="field-group">
+                <label for="password">Change Password</label>
+                <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">We recommend using a strong password that you don't use elsewhere.</p>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;">
+            
+            <!-- Notifications -->
+            <h3 style="margin-bottom: 1rem; color: #475569; font-size: 1.1rem;">Notifications</h3>
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Email Notifications</h4>
+                    <p>Receive email updates about your account activity and security alerts.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" name="notifications" {% if current_user.notifications == 1 %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="toggle-group">
+                <div class="toggle-info">
+                    <h4>Marketing Communications</h4>
+                    <p>Receive newsletters and updates about new features.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-submit">Save All Settings</button>
+        </form>
+    </div>
 </div>
-</body></html>
+</body>
+</html>

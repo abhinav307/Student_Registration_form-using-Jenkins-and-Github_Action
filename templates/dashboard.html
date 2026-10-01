@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* ── Reset & Base ── */
         *, *::before, *::after {
@@ -452,10 +453,27 @@
             </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-            <span class="search-icon-placeholder">&#128269;</span>
+        <!-- Charts Row -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
+            <div class="stat-card" style="padding: 1.5rem;">
+                <h3 style="font-size: 1rem; color: #475569; margin-bottom: 1rem; text-align: center;">Course Enrollment</h3>
+                <canvas id="courseChart" height="200"></canvas>
+            </div>
+            <div class="stat-card" style="padding: 1.5rem;">
+                <h3 style="font-size: 1rem; color: #475569; margin-bottom: 1rem; text-align: center;">Gender Distribution</h3>
+                <canvas id="genderChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Search Bar & Actions -->
+        <div class="search-container" style="display: flex; gap: 1rem;">
+            <div style="position: relative; flex-grow: 1;">
+                <span class="search-icon-placeholder">&#128269;</span>
             <input type="text" class="search-input" id="searchInput" placeholder="Search students by name, email, course...">
+            </div>
+            <button onclick="exportToCSV()" style="padding: 0 1.5rem; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                &#11118; Export CSV
+            </button>
         </div>
 
         <!-- Students Table -->
@@ -529,6 +547,11 @@
                 } else {
                     document.getElementById('statGender').textContent = '\u2014';
                     document.getElementById('statGenderDetail').textContent = '';
+                }
+                
+                // Update charts if data exists
+                if (typeof updateCharts === 'function') {
+                    updateCharts(data.courses, data.genders);
                 }
             } catch (err) {
                 console.error('Stats error:', err);
@@ -642,6 +665,84 @@
                 fetchStudents(query);
             }, 300);
         });
+
+        // Export to CSV
+        async function exportToCSV() {
+            try {
+                let url = '/api/students';
+                const query = document.getElementById('searchInput').value.trim();
+                if (query) url += '?search=' + encodeURIComponent(query);
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                const students = data.students || [];
+                
+                if (students.length === 0) {
+                    showToast('No data to export', 'error');
+                    return;
+                }
+                
+                const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Course', 'Semester', 'Gender', 'Registered At'];
+                let csvContent = headers.join(',') + '\n';
+                
+                students.forEach(s => {
+                    const row = [
+                        s.id, s.first_name, s.last_name, s.email, s.phone, 
+                        s.course, s.semester, s.gender, s.registered_at
+                    ].map(v => '"' + (v || '') + '"').join(',');
+                    csvContent += row + '\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'students_export.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('Export successful!', 'success');
+            } catch (err) {
+                console.error('Export error:', err);
+                showToast('Failed to export CSV', 'error');
+            }
+        }
+
+        let courseChartInstance = null;
+        let genderChartInstance = null;
+
+        function updateCharts(courses, genders) {
+            const courseCtx = document.getElementById('courseChart').getContext('2d');
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            
+            if (courseChartInstance) courseChartInstance.destroy();
+            if (genderChartInstance) genderChartInstance.destroy();
+            
+            courseChartInstance = new Chart(courseCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(courses || {}),
+                    datasets: [{
+                        label: 'Students Enrolled',
+                        data: Object.values(courses || {}),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+            
+            genderChartInstance = new Chart(genderCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(genders || {}),
+                    datasets: [{
+                        data: Object.values(genders || {}),
+                        backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(168, 85, 247, 0.8)']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
 
         // Initial load
         fetchStats();

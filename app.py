@@ -74,10 +74,28 @@ def init_db(db_path=None):
                 password_hash   TEXT    NOT NULL,
                 full_name       TEXT,
                 bio             TEXT,
-                theme           TEXT    DEFAULT 'light'
+                theme           TEXT    DEFAULT 'light',
+                avatar_url      TEXT    DEFAULT 'https://ui-avatars.com/api/?name=User&background=random',
+                cover_url       TEXT    DEFAULT 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1000&q=80',
+                twitter         TEXT,
+                linkedin        TEXT,
+                github          TEXT,
+                notifications   INTEGER DEFAULT 1
             )
             """
         )
+        
+        # Safely add columns if they don't exist (for existing dev DBs)
+        try:
+            db.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT 'https://ui-avatars.com/api/?name=User&background=random'")
+            db.execute("ALTER TABLE users ADD COLUMN cover_url TEXT DEFAULT 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1000&q=80'")
+            db.execute("ALTER TABLE users ADD COLUMN twitter TEXT")
+            db.execute("ALTER TABLE users ADD COLUMN linkedin TEXT")
+            db.execute("ALTER TABLE users ADD COLUMN github TEXT")
+            db.execute("ALTER TABLE users ADD COLUMN notifications INTEGER DEFAULT 1")
+        except sqlite3.OperationalError:
+            pass # Columns already exist
+
         db.commit()
 
 
@@ -227,8 +245,16 @@ def profile():
     if request.method == "POST":
         full_name = request.form.get("full_name")
         bio = request.form.get("bio")
+        avatar_url = request.form.get("avatar_url")
+        cover_url = request.form.get("cover_url")
+        twitter = request.form.get("twitter")
+        linkedin = request.form.get("linkedin")
+        github = request.form.get("github")
         db = get_db()
-        db.execute("UPDATE users SET full_name = ?, bio = ? WHERE id = ?", (full_name, bio, session['user_id']))
+        db.execute(
+            "UPDATE users SET full_name = ?, bio = ?, avatar_url = ?, cover_url = ?, twitter = ?, linkedin = ?, github = ? WHERE id = ?", 
+            (full_name, bio, avatar_url, cover_url, twitter, linkedin, github, session['user_id'])
+        )
         db.commit()
         return redirect(url_for('profile'))
     return render_template("profile.html")
@@ -239,9 +265,13 @@ def settings():
     if request.method == "POST":
         theme = request.form.get("theme")
         password = request.form.get("password")
+        notifications = request.form.get("notifications")
+        
+        notif_val = 1 if notifications == 'on' else 0
+        
         db = get_db()
         if theme:
-            db.execute("UPDATE users SET theme = ? WHERE id = ?", (theme, session['user_id']))
+            db.execute("UPDATE users SET theme = ?, notifications = ? WHERE id = ?", (theme, notif_val, session['user_id']))
         if password:
             db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(password), session['user_id']))
         db.commit()
