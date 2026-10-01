@@ -1,7 +1,7 @@
 # ════════════════════════════════════════════════════════════════
-#  GitHub Actions CI — Student Registration Form
+#  GitHub Actions CI — Student Registration Form (Full-Stack)
 #  Runs on every push & pull request to main.
-#  Validates that index.html exists and passes all tests.
+#  Validates HTML, tests API, and checks all endpoints.
 # ════════════════════════════════════════════════════════════════
 
 name: CI — Validate Student Registration Form
@@ -13,8 +13,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  validate-html:
-    name: Validate HTML & Run Tests
+  validate-and-test:
+    name: Build, Validate & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +22,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Verify index.html exists ──
-      - name: Check index.html exists
+      # ── 2. Verify critical files exist ──
+      - name: Check project files exist
         run: |
-          echo "📄 Checking if index.html exists..."
-          if [ ! -f index.html ]; then
-            echo "❌ ERROR: index.html not found in repository root!"
+          echo "📄 Checking project files..."
+          ERRORS=0
+          for f in index.html app.py requirements.txt Jenkinsfile templates/dashboard.html; do
+            if [ ! -f "$f" ]; then
+              echo "  ❌ Missing: $f"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "  ✅ Found: $f"
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ $ERRORS file(s) missing!"
             exit 1
           fi
-          echo "✅ index.html found."
 
       # ── 3. Verify required HTML elements ──
       - name: Verify required HTML elements
@@ -60,6 +68,7 @@ jobs:
           check_element 'id="terms"'           'Terms checkbox'
           check_element '<title>'              '<title> tag'
           check_element 'viewport'             'Viewport meta tag'
+          check_element '/api/register'        'API endpoint reference'
 
           if [ $ERRORS -gt 0 ]; then
             echo ""
@@ -77,14 +86,24 @@ jobs:
           python-version: '3.12'
 
       # ── 5. Install dependencies ──
-      - name: Install test dependencies
-        run: pip install pytest
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-      # ── 6. Run pytest suite ──
-      - name: Run tests
-        run: python -m pytest tests/ -v --tb=short
+      # ── 6. Run HTML Tests ──
+      - name: Run HTML validation tests
+        run: python -m pytest tests/test_html.py -v --tb=short
 
-      # ── 7. Summary ──
+      # ── 7. Run API Tests ──
+      - name: Run API tests
+        run: python -m pytest tests/test_api.py -v --tb=short
+
+      # ── 8. Run All Tests with Coverage ──
+      - name: Run full test suite
+        run: python -m pytest tests/ -v --tb=short --junitxml=test-results.xml
+
+      # ── 9. Summary ──
       - name: Print summary
         if: always()
         run: |

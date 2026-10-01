@@ -1,14 +1,15 @@
 /*
  * ════════════════════════════════════════════════════════════════
- *  Jenkinsfile — Student Registration Form CI Pipeline
+ *  Jenkinsfile — Student Registration Form CI Pipeline (Full-Stack)
  * ════════════════════════════════════════════════════════════════
  *  Stages:
- *    1. Checkout        → Pull latest code
- *    2. Verify HTML     → Confirm index.html exists
- *    3. Validate HTML   → Check required form elements
- *    4. Setup Python    → Install pytest
- *    5. Run Tests       → Execute pytest test suite
- *    6. Report          → Publish test results
+ *    1. Checkout          → Pull latest code
+ *    2. Verify Files      → Confirm all project files exist
+ *    3. Validate HTML     → Check required form elements
+ *    4. Setup Python      → Install Flask + pytest
+ *    5. Run HTML Tests    → Validate HTML structure
+ *    6. Run API Tests     → Test all REST endpoints
+ *    7. Report            → Publish test results
  * ════════════════════════════════════════════════════════════════
  */
 
@@ -35,15 +36,36 @@ pipeline {
             }
         }
 
-        // ── Stage 2: Verify HTML File Exists ──
-        stage('Verify HTML File') {
+        // ── Stage 2: Verify All Project Files ──
+        stage('Verify Project Files') {
             steps {
-                echo "📄 Verifying ${env.HTML_FILE} exists..."
+                echo '📄 Verifying project files...'
                 script {
-                    if (!fileExists(env.HTML_FILE)) {
-                        error("❌ ${env.HTML_FILE} not found in workspace!")
+                    def requiredFiles = [
+                        'index.html',
+                        'app.py',
+                        'requirements.txt',
+                        'Jenkinsfile',
+                        'templates/dashboard.html',
+                        'tests/test_html.py',
+                        'tests/test_api.py',
+                    ]
+
+                    def missing = []
+                    requiredFiles.each { f ->
+                        if (fileExists(f)) {
+                            echo "  ✅ Found: ${f}"
+                        } else {
+                            echo "  ❌ Missing: ${f}"
+                            missing.add(f)
+                        }
                     }
-                    echo "✅ ${env.HTML_FILE} found."
+
+                    if (missing.size() > 0) {
+                        error("❌ ${missing.size()} file(s) missing: ${missing}")
+                    }
+
+                    echo '🎉 All project files verified!'
                 }
             }
         }
@@ -69,6 +91,7 @@ pipeline {
                         ['type="submit"',    'Submit button'],
                         ['id="terms"',       'Terms checkbox'],
                         ['<title>',          '<title> tag'],
+                        ['/api/register',    'API endpoint reference'],
                     ]
 
                     requiredElements.each { item ->
@@ -99,34 +122,54 @@ pipeline {
                             python3 -m venv venv
                             . venv/bin/activate
                             pip install --upgrade pip
-                            pip install pytest
+                            pip install -r requirements.txt
                         '''
                     } else {
                         bat '''
                             python -m venv venv
                             call venv\\Scripts\\activate.bat
                             pip install --upgrade pip
-                            pip install pytest
+                            pip install -r requirements.txt
                         '''
                     }
                 }
             }
         }
 
-        // ── Stage 5: Run Pytest Suite ──
-        stage('Run Tests') {
+        // ── Stage 5: Run HTML Tests ──
+        stage('Run HTML Tests') {
             steps {
-                echo '🧪 Running pytest test suite...'
+                echo '🧪 Running HTML validation tests...'
                 script {
                     if (isUnix()) {
                         sh '''
                             . venv/bin/activate
-                            python -m pytest tests/ -v --tb=short --junitxml=test-results.xml
+                            python -m pytest tests/test_html.py -v --tb=short --junitxml=html-test-results.xml
                         '''
                     } else {
                         bat '''
                             call venv\\Scripts\\activate.bat
-                            python -m pytest tests/ -v --tb=short --junitxml=test-results.xml
+                            python -m pytest tests/test_html.py -v --tb=short --junitxml=html-test-results.xml
+                        '''
+                    }
+                }
+            }
+        }
+
+        // ── Stage 6: Run API Tests ──
+        stage('Run API Tests') {
+            steps {
+                echo '🧪 Running API tests...'
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            . venv/bin/activate
+                            python -m pytest tests/test_api.py -v --tb=short --junitxml=api-test-results.xml
+                        '''
+                    } else {
+                        bat '''
+                            call venv\\Scripts\\activate.bat
+                            python -m pytest tests/test_api.py -v --tb=short --junitxml=api-test-results.xml
                         '''
                     }
                 }
@@ -137,13 +180,13 @@ pipeline {
     post {
         always {
             echo '📊 Publishing test results...'
-            junit allowEmptyResults: true, testResults: 'test-results.xml'
+            junit allowEmptyResults: true, testResults: '*-test-results.xml'
         }
         success {
             echo '''
             ════════════════════════════════════
               ✅ BUILD SUCCESSFUL
-              All tests passed!
+              All HTML + API tests passed!
             ════════════════════════════════════
             '''
         }

@@ -231,6 +231,12 @@
 <div class="form-container" id="registrationFormContainer">
     <h1>Student Registration</h1>
     <p class="subtitle">Fill in your details to register for the new academic session</p>
+    <p style="text-align:center; margin-bottom:1.5rem;">
+        <a href="/dashboard" style="color:#00d2ff; text-decoration:none; font-size:0.9rem; border:1px solid rgba(0,210,255,0.3); padding:0.4rem 1rem; border-radius:8px; transition:all 0.3s;"
+           onmouseover="this.style.background='rgba(0,210,255,0.1)'" onmouseout="this.style.background='transparent'">
+            📊 View Dashboard
+        </a>
+    </p>
 
     <form id="registrationForm" class="form-grid" novalidate>
         <!-- First Name -->
@@ -466,16 +472,49 @@
             // ── Collect Data ──
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-            console.table(data);
 
-            // ── Show Toast ──
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3500);
+            // ── Submit to Backend API ──
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
 
-            // ── Reset Form ──
-            form.reset();
-            document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
-            document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json().then(body => ({ status: res.status, body })))
+            .then(({ status, body }) => {
+                if (status === 201) {
+                    // ── Show Success Toast ──
+                    toast.textContent = '✅ Registration Successful!';
+                    toast.style.background = '#1db954';
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 3500);
+
+                    // ── Reset Form ──
+                    form.reset();
+                    document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+                    document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
+                } else {
+                    // ── Show Error Toast ──
+                    toast.textContent = '❌ ' + (body.error || 'Registration failed');
+                    toast.style.background = '#ff4757';
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 4000);
+                }
+            })
+            .catch(err => {
+                console.error('Registration error:', err);
+                toast.textContent = '❌ Server error. Is the backend running?';
+                toast.style.background = '#ff4757';
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 4000);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register Now';
+            });
         });
     })();
 </script>
