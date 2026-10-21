@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact & Registration Form</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            color: #f8fafc;
+        }
+
+        .form-card {
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 480px;
+            padding: 40px 32px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .form-header h2 {
+            color: #0f172a;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .form-header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .form-group label .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+            background-color: #f8fafc;
+        }
+
+        .form-group input:focus {
+            border-color: #2563eb;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        .status-message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-message.success {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-card">
+        <div class="form-header">
+            <h2>User Registration Form</h2>
+            <p>Please fill out your contact details below</p>
+        </div>
+
+        <form id="contactForm" method="POST" onsubmit="event.preventDefault(); document.getElementById('statusMsg').className='status-message success'; document.getElementById('statusMsg').innerText='Form submitted successfully!';">
+            <!-- Full Name Field -->
+            <div class="form-group">
+                <label for="name">Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" placeholder="John Doe" required>
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="john.doe@example.com" required>
+            </div>
+
+            <!-- Contact Number Field -->
+            <div class="form-group">
+                <label for="contactNumber">Contact Number <span class="required">*</span></label>
+                <input type="tel" id="contactNumber" name="contactNumber" placeholder="9876543210" pattern="[0-9]{10}" title="Please enter a valid 10-digit contact number" required>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submitBtn" class="btn-submit">Submit</button>
+
+            <!-- Status message container -->
+            <div id="statusMsg" class="status-message"></div>
+        </form>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    environment {
+        PYTHONUNBUFFERED = '1'
+    }
+
+    stages {
+        stage('Checkout Source Code') {
+            steps {
+                echo '=== Task 2 Verification: Retrieving source code from GitHub ==='
+                checkout scm
+            }
+        }
+
+        stage('Set Up Environment') {
+            steps {
+                echo '=== Installing Test Requirements ==='
+                bat 'python -m pip install --upgrade pytest beautifulsoup4'
+            }
+        }
+
+        stage('Automated HTML Form Testing') {
+            steps {
+                echo '=== Task 4 & 5 Verification: Executing Automated Tests on HTML Form ==='
+                bat 'python -m pytest "request completion/test_form.py" -v --junitxml="request completion/test-results.xml"'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Archiving test results...'
+            junit allowEmptyResults: true, testResults: 'request completion/test-results.xml'
+        }
+        success {
+            echo '======================================================='
+            echo 'SUCCESS: All HTML Form automated tests passed successfully!'
+            echo '======================================================='
+        }
+        failure {
+            echo '======================================================='
+            echo 'FAILURE: HTML Form validation tests failed.'
+            echo '======================================================='
+        }
+    }
+}
